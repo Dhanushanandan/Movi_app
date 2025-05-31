@@ -26,7 +26,7 @@ class MovieListFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var movieAdapter: MovieAdapter
     private val movieList = mutableListOf<Movie>()
-    private val apiKey = "your_api_key_here" // Replace with your TMDB API key
+    private val apiKey = "f0be361259ca3d1e96daeed30f539267" // Replace with your TMDB API key
 
     // Map genre names to TMDB genre IDs
     private val genreMap = mapOf(
