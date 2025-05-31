@@ -1,20 +1,17 @@
 package com.example.movi_app.ui.theme
 
-
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.Spinner
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.movi_app.R
 import com.example.movi_app.RetrofitClient
 import com.example.movi_app.adapter.MovieAdapter
+import com.example.movi_app.databinding.FragmentMovieListBinding
 import com.example.movi_app.model.Movie
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,12 +20,12 @@ import kotlinx.coroutines.withContext
 
 class MovieListFragment : Fragment() {
 
-    private lateinit var recyclerView: RecyclerView
+    private var _binding: FragmentMovieListBinding? = null
+    private val binding get() = _binding!!
     private lateinit var movieAdapter: MovieAdapter
     private val movieList = mutableListOf<Movie>()
-    private val apiKey = "f0be361259ca3d1e96daeed30f539267" // Replace with your TMDB API key
+    private val apiKey = "f0be361259ca3d1e96daeed30f539267"
 
-    // Map genre names to TMDB genre IDs
     private val genreMap = mapOf(
         "Action" to 28,
         "Comedy" to 35,
@@ -36,22 +33,23 @@ class MovieListFragment : Fragment() {
     )
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_movie_list, container, false)
+        _binding = FragmentMovieListBinding.inflate(inflater, container, false)
+        val view = binding.root
 
-        recyclerView = view.findViewById(R.id.recycler_view_movies)
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        binding.recyclerViewMovies.layoutManager = LinearLayoutManager(context)
         movieAdapter = MovieAdapter(movieList) { movie ->
-            val action = MovieListFragmentDirections.actionMovieListFragmentToMovieDetailFragment(movie.id)
-            findNavController().navigate(action)
+            try {
+                val action = MovieListFragmentDirections.actionMovieListFragmentToMovieDetailFragment(movie.id)
+                findNavController().navigate(action)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-        recyclerView.adapter = movieAdapter
-
-        val spinnerCategory = view.findViewById<Spinner>(R.id.spinner_category)
-        val spinnerGenre = view.findViewById<Spinner>(R.id.spinner_genre)
-        val btnApplyFilter = view.findViewById<Button>(R.id.btn_apply_filter)
+        binding.recyclerViewMovies.adapter = movieAdapter
 
         ArrayAdapter.createFromResource(
             requireContext(),
@@ -59,7 +57,7 @@ class MovieListFragment : Fragment() {
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinnerCategory.adapter = adapter
+            binding.spinnerCategory.adapter = adapter
         }
 
         ArrayAdapter.createFromResource(
@@ -68,11 +66,11 @@ class MovieListFragment : Fragment() {
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinnerGenre.adapter = adapter
+            binding.spinnerGenre.adapter = adapter
         }
 
-        btnApplyFilter.setOnClickListener {
-            loadMovies(spinnerCategory.selectedItem.toString(), spinnerGenre.selectedItem.toString())
+        binding.btnApplyFilter.setOnClickListener {
+            loadMovies(binding.spinnerCategory.selectedItem.toString(), binding.spinnerGenre.selectedItem.toString())
         }
 
         loadMovies("Popular", "All")
@@ -89,7 +87,6 @@ class MovieListFragment : Fragment() {
                     else -> RetrofitClient.api.getPopularMovies(apiKey, 1)
                 }
 
-                // Filter movies by genre
                 val filteredList = if (genre == "All") {
                     response.movies
                 } else {
@@ -103,10 +100,21 @@ class MovieListFragment : Fragment() {
                     movieList.clear()
                     movieList.addAll(filteredList)
                     movieAdapter.notifyDataSetChanged()
+                    binding.recyclerViewMovies.visibility = View.VISIBLE
+                    binding.errorText.visibility = View.GONE
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    binding.recyclerViewMovies.visibility = View.GONE
+                    binding.errorText.visibility = View.VISIBLE
+                    e.printStackTrace()
+                }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null // Prevent memory leaks
     }
 }

@@ -14,14 +14,14 @@
 
     <Spinner
         android:id="@+id/spinner_category"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:entries="@array/movie_categories" />
 
     <Spinner
         android:id="@+id/spinner_genre"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:entries="@array/movie_genres" />
 
     <Button
@@ -29,6 +29,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Apply Filter" />
+
+    <TextView
+        android:id="@+id/error_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Failed to load movies. Check your internet connection."
+        android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_movies"

@@ -5,11 +5,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.navigation.fragment.navArgs
 import com.example.movi_app.R
 import com.example.movi_app.RetrofitClient
+import com.example.movi_app.databinding.FragmentMovieDetailBinding
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,17 +17,20 @@ import kotlinx.coroutines.withContext
 
 class MovieDetailFragment : Fragment() {
 
+    private var _binding: FragmentMovieDetailBinding? = null
+    private val binding get() = _binding!!
     private val args: MovieDetailFragmentArgs by navArgs()
-    private val apiKey = "f0be361259ca3d1e96daeed30f539267" // Replace with your TMDB API key
+    private val apiKey = "f0be361259ca3d1e96daeed30f539267"
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_movie_detail, container, false)
+        _binding = FragmentMovieDetailBinding.inflate(inflater, container, false)
+        val view = binding.root
 
-        val movieId = args.movieId
-        loadMovieDetails(movieId, view)
+        loadMovieDetails(args.movieId, view)
 
         return view
     }
@@ -38,15 +40,25 @@ class MovieDetailFragment : Fragment() {
             try {
                 val response = RetrofitClient.api.getMovieDetails(movieId, apiKey)
                 withContext(Dispatchers.Main) {
-                    view.findViewById<TextView>(R.id.text_title).text = response.title
-                    view.findViewById<TextView>(R.id.text_release_date).text = "Release Date: ${response.releaseDate}"
-                    view.findViewById<TextView>(R.id.text_rating).text = "Rating: ${response.rating}"
-                    view.findViewById<TextView>(R.id.text_overview).text = "Overview: ${response.overview}"
-                    Picasso.get().load("https://image.tmdb.org/t/p/w500${response.posterPath}").into(view.findViewById<ImageView>(R.id.image_poster))
+                    binding.textTitle.text = response.title
+                    binding.textReleaseDate.text = "Release Date: ${response.releaseDate ?: "N/A"}"
+                    binding.textRating.text = "Rating: ${response.rating}"
+                    binding.textOverview.text = "Overview: ${response.overview}"
+                    Picasso.get()
+                        .load("https://image.tmdb.org/t/p/w500${response.posterPath}")
+                        .into(binding.imagePoster)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    binding.textTitle.text = "Error loading movie details."
+                    e.printStackTrace()
+                }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
